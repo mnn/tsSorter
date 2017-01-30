@@ -66,6 +66,11 @@ Installation
 1. Run `stack build`.
 2. Locate compiled exe file (e.g. `.stack-work/install/x86_64-linux/ghc-8.0.2/8.0.2/bin/ts-sorter-exe`) and run it, or use command `stack exec ts-sorter-exe` to run executable for you.
 
+Running tests
+============
+Parsing tests can be run via `stack test` from `/`.
+System tests can be executed from directory `/res` via `./DoTests.hs`. Note that you have to first install dependencies (install [Node.js](https://nodejs.org/en/) and then run `npm install` in `/res` directory).
+
 License
 =======
 GPLv3

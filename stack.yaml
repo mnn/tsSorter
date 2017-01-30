@@ -9,6 +9,7 @@ extra-deps:
 - HTF-0.13.1.0
 - HUnit-1.5.0.0
 - Hclip-3.0.0.4
+- MissingH-1.4.0.1
 - MonadRandom-0.5
 - QuickCheck-2.9.2
 - StateVar-1.1.0.4
@@ -48,6 +49,7 @@ extra-deps:
 - haskell-src-exts-1.18.2
 - hlint-1.9.39
 - hscolour-1.24.1
+- hslogger-1.2.10
 - integer-logarithms-1
 - kan-extensions-5.0.1
 - lens-4.15.1
@@ -56,6 +58,7 @@ extra-deps:
 - monad-control-1.0.1.0
 - monad-journal-0.7.2
 - mtl-2.2.1
+- network-2.6.3.1
 - old-locale-1.0.0.7
 - old-time-1.1.0.3
 - optparse-applicative-0.13.0.0

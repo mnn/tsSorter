@@ -124,7 +124,7 @@ test_parseTop = do
              \   createJobFunctionsResponseSchema\n\
              \ } from './data/job-functions-classes';"
             ]
-  let neg = [""]
+  let neg = []
   testParser parseTop pos neg
 
 {-

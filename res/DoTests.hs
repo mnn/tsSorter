@@ -127,7 +127,7 @@ doTestWrapped fileName = do
   let endChunk = genChunk "[end] " & RB.fore RB.cyan
   let resChunk = if res then genChunk "Success" & RB.fore RB.green
                         else genChunk "Failure" & RB.fore RB.red & RB.bold
-  printChunksLnWithPrefix [endChunk, genChunk fileName, genChunk " - ", resChunk]
+  printChunksLnWithPrefix [endChunk, genChunk fileName, genChunk " - ", resChunk, genChunk "\n"]
   return res
 
 runTests :: TestStateMonad IO ()

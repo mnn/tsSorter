@@ -6,9 +6,11 @@ import           Control.Lens                  ((&), (<&>))
 import           Control.Monad                 (void)
 import           Data.Char                     (toLower)
 import           Data.List                     (groupBy, intercalate,
-                                                intersperse, nubBy, sortBy)
+                                                intersperse, nubBy, partition,
+                                                sortBy)
 import           Data.Maybe                    (fromMaybe)
 import           Data.Ord                      (Ordering)
+import           Data.String.Utils             (startswith)
 import           Text.Parsec.Char
 import           Text.ParserCombinators.Parsec hiding (spaces, (<|>))
 import           Text.Regex                    (mkRegex, subRegex)
@@ -39,7 +41,7 @@ anyNewLine :: Parser ()
 anyNewLine = void $ newline <|> crlf
 
 parseImportGroupAlias :: Parser String
-parseImportGroupAlias = many1 alphaNum
+parseImportGroupAlias = many1 $ alphaNum <|> oneOf "_$" 
 
 parseImportSourceObjectName :: Parser String
 parseImportSourceObjectName = many1 alphaNum
@@ -147,11 +149,21 @@ parseTop = do
 removeRecurringNewLines :: String -> String
 removeRecurringNewLines x = subRegex (mkRegex "^\n{1,}$") x ""
 
+removeTailingNewLine :: String -> String
+removeTailingNewLine = reverse . dropLeadingNewLine . reverse
+
+dropTailingEmptyLine :: String -> String
+dropTailingEmptyLine x = let ls = lines x
+                             lst = last ls
+                           in if lst == "" then ls & init & unlines
+                                           else x
+
 class TsRender a where
   renderTsCode :: a -> String
 
 instance TsRender Code where
   renderTsCode (Code xs) = map renderTsCode xs & intercalate "\n\n" & removeRecurringNewLines
+    -- & applyN 2 dropTailingEmptyLine
 
 instance TsRender CodeGroup where
   renderTsCode (CodeGroup xs) = intercalate "\n" $ map renderTsCode xs
@@ -188,7 +200,8 @@ instance SortImports Code where
 
 instance SortImports CodeGroup where
   sortImports (CodeGroup xs) = sortedByFile & sortNamedImports & CodeGroup where
-    sortedByFile = sortBy cmp xs
+    sortedByFile :: [CodePart]
+    sortedByFile = xs & sortBy cmp & dotsToEnd & atSignToTop
     cmp (CodePartImport a) (CodePartImport b) = cmpImp a b
     cmp _ _                                   = EQ
     cmpImp (Import aBef (ImportSourceFile aSrc)) (Import bBef (ImportSourceFile bSrc)) = compareStringIgnoringCase aSrc bSrc
@@ -201,6 +214,13 @@ instance SortImports CodeGroup where
       (ImportBeforeFromPartSimple _) -> x
       (ImportBeforeFromPartGroup xs) -> ImportBeforeFromPartGroup $ sortBy cmpImportPart xs
     cmpImportPart (ImportPart aName aAlias) (ImportPart bName bAlias) = compareStringIgnoringCase aName bName
+    overFileNamePair f (CodePartImport (Import _ (ImportSourceFile a))) (CodePartImport (Import _ (ImportSourceFile b))) = f a b
+    overFileName _ f (CodePartImport (Import _ (ImportSourceFile a))) = f a
+    overFileName x _ _                                                = x
+    dotsToEnd xs = let (dots, rest) = partition (overFileName False $ startswith ".") xs
+                     in rest ++ dots
+    atSignToTop xs = let (ats, rest) = partition (overFileName False $ startswith "@") xs
+                     in ats ++ rest
 
 strToLower :: String -> String
 strToLower = map toLower
@@ -213,7 +233,7 @@ unifyImportsInGroups (Code groups) = Code resGroups where
   resGroups = map processGroup groups
   processGroup (CodeGroup parts) = CodeGroup (processParts parts)
   processParts :: [CodePart] -> [CodePart]
-  processParts parts = parts & groupBySourceFile & mergeGroups & mix parts & removeDuplicatedFromFirst & assignToFirst where
+  processParts parts = parts & groupBySourceFile & mergeGroups & mix parts &removeDuplicatedFromFirst & assignToFirst where
     groupBySourceFile :: [CodePart] -> [[CodePart]]
     groupBySourceFile = groupBy groupFn
     groupFn a b = getSrcFromPart a == getSrcFromPart b

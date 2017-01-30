@@ -19,6 +19,7 @@ library
                      , ghc-mod == 5.*
                      , lens == 4.*
                      , regex-compat == 0.*
+                     , MissingH == 1.4.*
   default-language:    Haskell2010
 
 executable ts-sorter-exe
