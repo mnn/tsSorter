@@ -5,3 +5,4 @@
 /res/node_modules/
 /npm-debug.log
 /tsSorter.iml
+/res/*.out.ts

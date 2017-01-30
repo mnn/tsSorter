@@ -11,6 +11,7 @@ import           Data.Maybe                    (fromMaybe)
 import           Data.Ord                      (Ordering)
 import           Text.Parsec.Char
 import           Text.ParserCombinators.Parsec hiding (spaces, (<|>))
+import           Text.Regex                    (mkRegex, subRegex)
 
 newtype Code = Code [CodeGroup] deriving (Eq, Show)
 
@@ -143,11 +144,14 @@ parseTop = do
   eof
   return $ Code $ parts ++ [CodeGroup [CodePartRaw rest]]
 
+removeRecurringNewLines :: String -> String
+removeRecurringNewLines x = subRegex (mkRegex "^\n{1,}$") x ""
+
 class TsRender a where
   renderTsCode :: a -> String
 
 instance TsRender Code where
-  renderTsCode (Code xs) = intercalate "\n\n" $ map renderTsCode xs
+  renderTsCode (Code xs) = map renderTsCode xs & intercalate "\n\n" & removeRecurringNewLines
 
 instance TsRender CodeGroup where
   renderTsCode (CodeGroup xs) = intercalate "\n" $ map renderTsCode xs
