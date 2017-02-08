@@ -41,7 +41,7 @@ anyNewLine :: Parser ()
 anyNewLine = void $ newline <|> crlf
 
 parseImportGroupAlias :: Parser String
-parseImportGroupAlias = many1 $ alphaNum <|> oneOf "_$" 
+parseImportGroupAlias = many1 $ alphaNum <|> oneOf "_$"
 
 parseImportSourceObjectName :: Parser String
 parseImportSourceObjectName = many1 alphaNum
@@ -236,23 +236,27 @@ unifyImportsInGroups (Code groups) = Code resGroups where
   processParts parts = parts & groupBySourceFile & mergeGroups & mix parts &removeDuplicatedFromFirst & assignToFirst where
     groupBySourceFile :: [CodePart] -> [[CodePart]]
     groupBySourceFile = groupBy groupFn
-    groupFn a b = getSrcFromPart a == getSrcFromPart b
+    groupFn a b = getSrcFromPart a == getSrcFromPart b && isNotImportBeforePartSimple a && isNotImportBeforePartSimple b
     getSrcFromPart (CodePartImport (Import _ (ImportSourceFile x))) = x
     getSrcFromPart _                                                = ""
+    isImportBeforePartSimple (CodePartImport (Import (ImportBeforeFromPartSimple _) _)) = True
+    isImportBeforePartSimple _ = False
+    isNotImportBeforePartSimple = not . isImportBeforePartSimple
     mergeGroups :: [[CodePart]] -> [CodePart]
     mergeGroups = map mergeGroup
     mergeGroup :: [CodePart] -> CodePart
     mergeGroup = foldl1 mergeGroupFoldFn
     mergeGroupFoldFn (CodePartImport (Import (ImportBeforeFromPartGroup accBef) accSrc)) (CodePartImport (Import (ImportBeforeFromPartGroup xBef) _)) =
       CodePartImport (Import (ImportBeforeFromPartGroup $ accBef ++ xBef) accSrc)
+    mergeGroupFoldFn a b = error $ "mergeGroupFoldFn crash:\n" ++ show a ++ "\n" ++ show b
     mix :: [CodePart] -> [CodePart] -> ([CodePart], [CodePart])
     mix = (,)
     removeDuplicatedFromFirst :: ([CodePart], [CodePart]) -> ([CodePart], [CodePart])
     removeDuplicatedFromFirst (x, y) = let r = nubBy groupFn x in (r, y)
     assignToFirst :: ([CodePart], [CodePart]) -> [CodePart]
-    assignToFirst (tpl, merged) = let db = map (\x->(getSrcFromPart x, x)) merged
+    assignToFirst (tpl, merged) = let db = map (\x->((getSrcFromPart x, isImportBeforePartSimple x), x)) merged
                                       m partTpl = fromMaybe (error "transformation or map is broken")
-                                        (lookup (getSrcFromPart partTpl) db)
+                                        (lookup (getSrcFromPart partTpl, isImportBeforePartSimple partTpl) db)
                                   in map m tpl
 
 formatCode :: Code -> String
