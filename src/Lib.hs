@@ -94,7 +94,7 @@ parseGroupImport = do
 
 -- just a simple names, no special handling of escapes
 parseFileName :: Parser String
-parseFileName = many1 (alphaNum <|> oneOf "./@-")
+parseFileName = many1 (alphaNum <|> oneOf "./@-_")
 
 parseFileNameString :: Parser String
 parseFileNameString = do

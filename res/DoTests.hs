@@ -133,7 +133,7 @@ doTestWrapped fileName = do
 runTests :: TestStateMonad IO ()
 runTests = do
   existingTestFiles <- takeWhileM (io . fileFilter) testFileNames
-  pr $ "test files = " ++ show existingTestFiles
+  pr $ "test files = " ++ show existingTestFiles ++ "\n"
   results <- mapM doTestWrapped existingTestFiles
   io $ putStrLn ""
   pr " results"
