@@ -40,11 +40,14 @@ data DataProcessingResult = DataProcessingResult String String
 anyNewLine :: Parser ()
 anyNewLine = void $ newline <|> crlf
 
+parseIdChar :: Parser Char
+parseIdChar = alphaNum <|> oneOf "_$"
+
 parseImportGroupAlias :: Parser String
-parseImportGroupAlias = many1 $ alphaNum <|> oneOf "_$"
+parseImportGroupAlias = many1 parseIdChar
 
 parseImportSourceObjectName :: Parser String
-parseImportSourceObjectName = many1 alphaNum
+parseImportSourceObjectName = many1 parseIdChar
 
 parseImportSourceObjectNameWithStar :: Parser String
 parseImportSourceObjectNameWithStar = string "*" <|> parseImportSourceObjectName
